@@ -3,11 +3,7 @@ import { getAuthenticatedUserFromCookies, hasAdminConsoleAccess } from '@/lib/ad
 
 export const dynamic = 'force-dynamic';
 
-export default async function AdminLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default async function SettingsAliasPage() {
   const user = await getAuthenticatedUserFromCookies();
 
   if (!user) {
@@ -18,5 +14,5 @@ export default async function AdminLayout({
     redirect('/dashboard');
   }
 
-  return <>{children}</>;
+  redirect('/admin/settings');
 }

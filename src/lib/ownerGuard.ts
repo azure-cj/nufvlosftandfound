@@ -10,10 +10,10 @@ import {
 } from './auth';
 import {
   OWNER_DEFAULT_PIN,
-  OWNER_EMAIL,
   OWNER_PIN_COOKIE_NAME,
   OWNER_PIN_MAX_AGE,
   OWNER_PIN_SETTING_KEY,
+  isOwnerEmail,
 } from './owner';
 import { prisma } from './prisma';
 
@@ -81,7 +81,7 @@ export async function getOwnerUser() {
     },
   });
 
-  if (!user || !user.isActive || user.email !== OWNER_EMAIL) {
+  if (!user || !user.isActive || !isOwnerEmail(user.email)) {
     return null;
   }
 
