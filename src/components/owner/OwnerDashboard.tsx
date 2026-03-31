@@ -107,6 +107,10 @@ export function OwnerDashboard({
     }
   }, []);
 
+  const returnToDashboard = useCallback(() => {
+    window.location.assign('/dashboard');
+  }, []);
+
   return (
     <div className="min-h-screen bg-[#0f172a] text-[#f1f5f9]">
       <div className="mx-auto max-w-[1200px] px-4 py-8 md:px-8">
@@ -122,12 +126,13 @@ export function OwnerDashboard({
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            <Link
+            <button
               className="inline-flex items-center justify-center rounded-xl border border-[#334155] bg-[#1e293b] px-4 py-2.5 text-sm font-semibold text-slate-100 transition hover:border-indigo-400 hover:bg-[#273449]"
-              href="/dashboard"
+              onClick={returnToDashboard}
+              type="button"
             >
               Return to Dashboard
-            </Link>
+            </button>
             <Link
               className="inline-flex items-center justify-center rounded-xl border border-[#334155] bg-[#1e293b] px-4 py-2.5 text-sm font-semibold text-slate-100 transition hover:border-indigo-400 hover:bg-[#273449]"
               href="/api/auth/logout"
