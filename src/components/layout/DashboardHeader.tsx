@@ -20,11 +20,13 @@ export function DashboardHeader({ onMenuToggle }: { onMenuToggle?: () => void })
     ? getUserDisplayName(user)
     : loading
       ? 'Loading...'
-      : 'Staff User';
+      : '';
   const initials = user
     ? `${user.firstName?.[0] ?? user.username?.[0] ?? 'S'}${user.lastName?.[0] ?? user.username?.[1] ?? 'A'}`
         .toUpperCase()
-    : 'SU';
+    : loading
+      ? '...'
+      : '--';
 
   useEffect(() => {
     setSearch(searchParams.get('search') ?? '');
@@ -119,7 +121,11 @@ export function DashboardHeader({ onMenuToggle }: { onMenuToggle?: () => void })
             {initials}
           </div>
           <div className="hidden text-right sm:block">
-            <p className="text-[13px] font-semibold text-slate-900 dark:text-[#f1f5f9]">{displayName}</p>
+            {displayName ? (
+              <p className="text-[13px] font-semibold text-slate-900 dark:text-[#f1f5f9]">{displayName}</p>
+            ) : (
+              <div className="h-4 w-24 rounded bg-slate-200/80 dark:bg-slate-700/70" />
+            )}
             {user ? (
               <span className="mt-1 inline-flex rounded-md bg-indigo-50 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-indigo-500 dark:bg-indigo-500/15 dark:text-indigo-300">
                 {user.role}
