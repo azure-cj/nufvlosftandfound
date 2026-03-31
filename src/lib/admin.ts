@@ -4,6 +4,7 @@ import { eachDayOfInterval, format, startOfDay, subDays } from 'date-fns';
 import type { NextRequest } from 'next/server';
 import { getAuthCookieName, getAuthPayloadFromRequest, verifyJWT } from './auth';
 import { ITEMS_PER_PAGE, ITEM_STATUS_LABELS } from './constants';
+import { isOwnerEmail } from './owner';
 import { prisma } from './prisma';
 import { formatDisplayDate, getUserDisplayName } from './utils';
 
@@ -13,6 +14,18 @@ const SETTING_KEYS = {
   retentionDays: 'item_retention_days',
   adminEmail: 'admin_email',
 } as const;
+
+type AdminSessionUser = {
+  id: string;
+  username: string;
+  email: string;
+  firstName?: string | null;
+  lastName?: string | null;
+  role: 'ADMIN' | 'USER';
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+};
 
 function buildDateRangeWhere(field: 'createdAt' | 'dateReported', dateFrom?: string, dateTo?: string) {
   if (!dateFrom && !dateTo) {
@@ -32,37 +45,11 @@ function buildDateRangeWhere(field: 'createdAt' | 'dateReported', dateFrom?: str
   return { [field]: range } as Prisma.ItemWhereInput | Prisma.UserWhereInput | Prisma.AuditLogWhereInput;
 }
 
-export async function requireAdminPayload(request: NextRequest) {
-  const payload = await getAuthPayloadFromRequest(request);
-
-  if (!payload?.userId) {
-    return null;
-  }
-
-  const user = await prisma.user.findUnique({
-    where: { id: payload.userId },
-    select: {
-      id: true,
-      email: true,
-      username: true,
-      role: true,
-      isActive: true,
-    },
-  });
-
-  if (!user?.isActive || user.role !== 'ADMIN') {
-    return null;
-  }
-
-  return {
-    userId: user.id,
-    email: user.email,
-    username: user.username,
-    role: user.role,
-  };
+export function hasAdminConsoleAccess(user: Pick<AdminSessionUser, 'email' | 'role' | 'isActive'>) {
+  return user.isActive && (user.role === 'ADMIN' || isOwnerEmail(user.email));
 }
 
-export async function getAdminSessionFromCookies() {
+export async function getAuthenticatedUserFromCookies() {
   const cookieStore = await cookies();
   const token = cookieStore.get(getAuthCookieName())?.value;
   const payload = token ? await verifyJWT(token) : null;
@@ -86,7 +73,47 @@ export async function getAdminSessionFromCookies() {
     },
   });
 
-  if (!user?.isActive || user.role !== 'ADMIN') {
+  if (!user?.isActive) {
+    return null;
+  }
+
+  return user;
+}
+
+export async function requireAdminPayload(request: NextRequest) {
+  const payload = await getAuthPayloadFromRequest(request);
+
+  if (!payload?.userId) {
+    return null;
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: payload.userId },
+    select: {
+      id: true,
+      email: true,
+      username: true,
+      role: true,
+      isActive: true,
+    },
+  });
+
+  if (!user || !hasAdminConsoleAccess(user)) {
+    return null;
+  }
+
+  return {
+    userId: user.id,
+    email: user.email,
+    username: user.username,
+    role: user.role,
+  };
+}
+
+export async function getAdminSessionFromCookies() {
+  const user = await getAuthenticatedUserFromCookies();
+
+  if (!user || !hasAdminConsoleAccess(user)) {
     return null;
   }
 

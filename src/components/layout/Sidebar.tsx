@@ -9,7 +9,7 @@ import {
   type DashboardNavItem,
 } from '@/components/layout/dashboard-config';
 import { useAuth } from '@/hooks/useAuth';
-import { OWNER_EMAIL } from '@/lib/owner';
+import { isOwnerEmail } from '@/lib/owner';
 import { cn } from '@/lib/utils';
 
 export function Sidebar({
@@ -21,8 +21,8 @@ export function Sidebar({
 }) {
   const pathname = usePathname();
   const { user } = useAuth();
-  const isAdmin = user?.role === 'ADMIN';
-  const isOwner = user?.email === OWNER_EMAIL;
+  const isOwner = isOwnerEmail(user?.email);
+  const isAdmin = user?.role === 'ADMIN' || isOwner;
 
   const renderLink = (item: DashboardNavItem) => {
     if (item.adminOnly && !isAdmin) {

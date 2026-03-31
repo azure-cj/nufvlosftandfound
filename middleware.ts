@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { getAuthCookieName, verifyJWT } from '@/lib/auth';
 
-const protectedRoutes = ['/dashboard', '/items', '/search', '/admin', '/owner'];
+const protectedRoutes = ['/dashboard', '/items', '/search', '/admin', '/owner', '/settings'];
 
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
@@ -48,5 +48,12 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/items/:path*', '/search/:path*', '/admin/:path*', '/owner/:path*'],
+  matcher: [
+    '/dashboard/:path*',
+    '/items/:path*',
+    '/search/:path*',
+    '/admin/:path*',
+    '/owner/:path*',
+    '/settings/:path*',
+  ],
 };
