@@ -35,11 +35,31 @@ function buildDateRangeWhere(field: 'createdAt' | 'dateReported', dateFrom?: str
 export async function requireAdminPayload(request: NextRequest) {
   const payload = await getAuthPayloadFromRequest(request);
 
-  if (!payload?.userId || payload.role !== 'ADMIN') {
+  if (!payload?.userId) {
     return null;
   }
 
-  return payload;
+  const user = await prisma.user.findUnique({
+    where: { id: payload.userId },
+    select: {
+      id: true,
+      email: true,
+      username: true,
+      role: true,
+      isActive: true,
+    },
+  });
+
+  if (!user?.isActive || user.role !== 'ADMIN') {
+    return null;
+  }
+
+  return {
+    userId: user.id,
+    email: user.email,
+    username: user.username,
+    role: user.role,
+  };
 }
 
 export async function getAdminSessionFromCookies() {
@@ -47,7 +67,7 @@ export async function getAdminSessionFromCookies() {
   const token = cookieStore.get(getAuthCookieName())?.value;
   const payload = token ? await verifyJWT(token) : null;
 
-  if (!payload?.userId || payload.role !== 'ADMIN') {
+  if (!payload?.userId) {
     return null;
   }
 
@@ -66,7 +86,7 @@ export async function getAdminSessionFromCookies() {
     },
   });
 
-  if (!user?.isActive) {
+  if (!user?.isActive || user.role !== 'ADMIN') {
     return null;
   }
 

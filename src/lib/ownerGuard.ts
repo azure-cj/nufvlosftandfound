@@ -62,7 +62,7 @@ export async function getOwnerUser() {
   const token = cookieStore.get(getAuthCookieName())?.value;
   const payload = token ? await verifyJWT(token) : null;
 
-  if (!payload?.userId || payload.email !== OWNER_EMAIL) {
+  if (!payload?.userId) {
     return null;
   }
 
