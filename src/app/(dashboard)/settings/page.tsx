@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { getAuthenticatedUserFromCookies, hasAdminConsoleAccess } from '@/lib/admin';
+import { getAuthenticatedUserFromCookies } from '@/lib/admin';
 
 export const dynamic = 'force-dynamic';
 
@@ -8,10 +8,6 @@ export default async function SettingsAliasPage() {
 
   if (!user) {
     redirect('/login');
-  }
-
-  if (!hasAdminConsoleAccess(user)) {
-    redirect('/dashboard');
   }
 
   redirect('/admin/settings');

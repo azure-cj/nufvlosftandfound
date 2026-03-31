@@ -1,16 +1,11 @@
-import { getOwnerUser, requireOwnerPinAccess } from '@/lib/ownerGuard';
+import { NextRequest } from 'next/server';
+import { requireAuthenticatedPayload } from '@/lib/admin';
 import { prisma } from '@/lib/prisma';
 
-export async function POST() {
-  const guard = await requireOwnerPinAccess();
+export async function POST(request: NextRequest) {
+  const user = await requireAuthenticatedPayload(request);
 
-  if (guard) {
-    return guard;
-  }
-
-  const owner = await getOwnerUser();
-
-  if (!owner) {
+  if (!user) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), {
       status: 403,
       headers: {
@@ -66,7 +61,7 @@ export async function POST() {
 
   const backup = {
     exportedAt: new Date().toISOString(),
-    exportedBy: owner.email,
+    exportedBy: user.email,
     version: '1.0',
     data: {
       items,

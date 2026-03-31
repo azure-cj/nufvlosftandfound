@@ -1,12 +1,12 @@
-import { NextResponse } from 'next/server';
-import { requireOwnerPinAccess } from '@/lib/ownerGuard';
+import { NextRequest, NextResponse } from 'next/server';
+import { requireAuthenticatedPayload } from '@/lib/admin';
 import { prisma } from '@/lib/prisma';
 
-export async function GET() {
-  const guard = await requireOwnerPinAccess();
+export async function GET(request: NextRequest) {
+  const guard = await requireAuthenticatedPayload(request);
 
   if (guard) {
-    return guard;
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
   }
 
   const recentLogs = await prisma.auditLog.findMany({

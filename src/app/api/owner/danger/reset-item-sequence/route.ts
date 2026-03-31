@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAuthenticatedPayload } from '@/lib/admin';
 import { createAuditLog } from '@/lib/audit';
 import { generateItemCode } from '@/lib/itemCode';
-import { getOwnerUser, requireOwnerPinAccess } from '@/lib/ownerGuard';
 
-export async function GET() {
-  const guard = await requireOwnerPinAccess();
+export async function GET(request: NextRequest) {
+  const guard = await requireAuthenticatedPayload(request);
 
   if (guard) {
-    return guard;
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
   }
 
   const nextItemCode = await generateItemCode();
@@ -19,13 +19,7 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
-  const guard = await requireOwnerPinAccess();
-
-  if (guard) {
-    return guard;
-  }
-
-  const owner = await getOwnerUser();
+  const owner = await requireAuthenticatedPayload(request);
 
   if (!owner) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
@@ -34,10 +28,10 @@ export async function POST(request: NextRequest) {
   const nextItemCode = await generateItemCode();
 
   await createAuditLog({
-    userId: owner.id,
+    userId: owner.userId,
     action: 'OWNER_RESET_ITEM_CODE_SEQUENCE',
     entityType: 'OWNER',
-    entityId: owner.id,
+    entityId: owner.userId,
     details: {
       nextItemCode,
       note: 'Owner synced the next item code preview to the current dataset.',
