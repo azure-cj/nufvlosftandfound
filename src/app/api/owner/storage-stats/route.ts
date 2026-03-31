@@ -1,6 +1,6 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { requireAuthenticatedPayload } from '@/lib/admin';
 import { prisma } from '@/lib/prisma';
-import { requireOwnerPinAccess } from '@/lib/ownerGuard';
 
 type DatabaseSizeRow = {
   size: string;
@@ -16,11 +16,11 @@ type TableSizeRow = {
 
 const NEON_FREE_TIER_LIMIT_BYTES = 512 * 1024 * 1024;
 
-export async function GET() {
-  const guard = await requireOwnerPinAccess();
+export async function GET(request: NextRequest) {
+  const guard = await requireAuthenticatedPayload(request);
 
   if (guard) {
-    return guard;
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
   }
 
   const [dbSizeRows, tableSizeRows] = await Promise.all([

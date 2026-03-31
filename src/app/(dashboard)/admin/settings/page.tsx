@@ -1,9 +1,9 @@
 import { redirect } from 'next/navigation';
 import { ProfileSettings } from '@/components/admin/ProfileSettings';
-import { getAdminSessionFromCookies } from '@/lib/admin';
+import { getAuthenticatedUserFromCookies } from '@/lib/admin';
 
 export default async function Page() {
-  const user = await getAdminSessionFromCookies();
+  const user = await getAuthenticatedUserFromCookies();
 
   if (!user) {
     redirect('/login');

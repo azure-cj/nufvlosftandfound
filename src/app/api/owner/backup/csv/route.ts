@@ -1,4 +1,5 @@
-import { getOwnerUser, requireOwnerPinAccess } from '@/lib/ownerGuard';
+import { NextRequest } from 'next/server';
+import { requireAuthenticatedPayload } from '@/lib/admin';
 import { prisma } from '@/lib/prisma';
 
 function escapeCsvValue(value: unknown) {
@@ -6,16 +7,10 @@ function escapeCsvValue(value: unknown) {
   return `"${stringValue.replace(/"/g, '""')}"`;
 }
 
-export async function POST(request: Request) {
-  const guard = await requireOwnerPinAccess();
+export async function POST(request: NextRequest) {
+  const user = await requireAuthenticatedPayload(request);
 
-  if (guard) {
-    return guard;
-  }
-
-  const owner = await getOwnerUser();
-
-  if (!owner) {
+  if (!user) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), {
       status: 403,
       headers: {

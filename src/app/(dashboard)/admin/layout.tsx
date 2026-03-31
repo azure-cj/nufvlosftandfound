@@ -1,6 +1,3 @@
-import { redirect } from 'next/navigation';
-import { getAuthenticatedUserFromCookies, hasAdminConsoleAccess } from '@/lib/admin';
-
 export const dynamic = 'force-dynamic';
 
 export default async function AdminLayout({
@@ -8,15 +5,5 @@ export default async function AdminLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const user = await getAuthenticatedUserFromCookies();
-
-  if (!user) {
-    redirect('/login');
-  }
-
-  if (!hasAdminConsoleAccess(user)) {
-    redirect('/dashboard');
-  }
-
   return <>{children}</>;
 }

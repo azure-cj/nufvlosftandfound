@@ -223,14 +223,12 @@ export const dashboardNavGroups: Array<{
         href: '/admin/settings',
         label: 'Settings',
         icon: SettingsIcon,
-        adminOnly: true,
         matches: [/^\/admin\/settings$/],
       },
       {
         href: '/owner',
-        label: 'Owner Console',
+        label: 'Database',
         icon: ShieldIcon,
-        ownerOnly: true,
         matches: [/^\/owner$/],
       },
       {

@@ -80,6 +80,36 @@ export async function getAuthenticatedUserFromCookies() {
   return user;
 }
 
+export async function requireAuthenticatedPayload(request: NextRequest) {
+  const payload = await getAuthPayloadFromRequest(request);
+
+  if (!payload?.userId) {
+    return null;
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: payload.userId },
+    select: {
+      id: true,
+      email: true,
+      username: true,
+      role: true,
+      isActive: true,
+    },
+  });
+
+  if (!user?.isActive) {
+    return null;
+  }
+
+  return {
+    userId: user.id,
+    email: user.email,
+    username: user.username,
+    role: user.role,
+  };
+}
+
 export async function requireAdminPayload(request: NextRequest) {
   const payload = await getAuthPayloadFromRequest(request);
 
