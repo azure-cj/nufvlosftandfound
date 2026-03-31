@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { getAuthCookieName, verifyJWT } from '@/lib/auth';
 
-const OWNER_EMAIL = 'aureojoseph518@gmail.com';
 const protectedRoutes = ['/dashboard', '/items', '/search', '/admin', '/owner'];
 
 export async function middleware(request: NextRequest) {
@@ -34,14 +33,6 @@ export async function middleware(request: NextRequest) {
     requestHeaders.set('x-user-email', payload.email);
     requestHeaders.set('x-user-role', payload.role);
     requestHeaders.set('x-user-username', payload.username);
-
-    if (pathname.startsWith('/admin') && payload.role !== 'ADMIN') {
-      return NextResponse.redirect(new URL('/dashboard', request.url));
-    }
-
-    if (pathname.startsWith('/owner') && payload.email !== OWNER_EMAIL) {
-      return NextResponse.redirect(new URL('/login', request.url));
-    }
 
     return NextResponse.next({
       request: {
