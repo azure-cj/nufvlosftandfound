@@ -45,6 +45,17 @@ async function getExistingItem(id: string) {
   });
 }
 
+async function getCurrentUserFromPayload(userId: string) {
+  return prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      id: true,
+      role: true,
+      isActive: true,
+    },
+  });
+}
+
 export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
@@ -73,6 +84,12 @@ export async function PATCH(
       return NextResponse.json({ message: 'Unauthorized.' }, { status: 401 });
     }
 
+    const currentUser = await getCurrentUserFromPayload(payload.userId);
+
+    if (!currentUser?.isActive) {
+      return NextResponse.json({ message: 'Unauthorized.' }, { status: 401 });
+    }
+
     const { id } = await params;
     const existingItem = await prisma.item.findUnique({
       where: { id },
@@ -83,7 +100,7 @@ export async function PATCH(
       return NextResponse.json({ message: 'Item not found.' }, { status: 404 });
     }
 
-    if (payload.role !== 'ADMIN' && existingItem.reporterId !== payload.userId) {
+    if (currentUser.role !== 'ADMIN' && existingItem.reporterId !== currentUser.id) {
       return NextResponse.json({ message: 'Forbidden.' }, { status: 403 });
     }
 
@@ -185,6 +202,12 @@ export async function DELETE(
       return NextResponse.json({ message: 'Unauthorized.' }, { status: 401 });
     }
 
+    const currentUser = await getCurrentUserFromPayload(payload.userId);
+
+    if (!currentUser?.isActive) {
+      return NextResponse.json({ message: 'Unauthorized.' }, { status: 401 });
+    }
+
     const { id } = await params;
     const existingItem = await prisma.item.findUnique({
       where: { id },
@@ -195,7 +218,7 @@ export async function DELETE(
       return NextResponse.json({ message: 'Item not found.' }, { status: 404 });
     }
 
-    if (payload.role !== 'ADMIN' && existingItem.reporterId !== payload.userId) {
+    if (currentUser.role !== 'ADMIN' && existingItem.reporterId !== currentUser.id) {
       return NextResponse.json({ message: 'Forbidden.' }, { status: 403 });
     }
 

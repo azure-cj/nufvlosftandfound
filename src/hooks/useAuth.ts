@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 
-type SessionUser = {
+export type SessionUser = {
   id: string;
   email: string;
   username: string;
@@ -14,35 +14,82 @@ type SessionUser = {
   updatedAt: string;
 };
 
-export function useAuth() {
-  const [user, setUser] = useState<SessionUser | null>(null);
-  const [loading, setLoading] = useState(true);
+function isSessionUser(value: unknown): value is SessionUser {
+  if (!value || typeof value !== 'object') {
+    return false;
+  }
+
+  const candidate = value as Partial<SessionUser>;
+  return Boolean(
+    candidate.id &&
+      candidate.email &&
+      candidate.username &&
+      candidate.role &&
+      typeof candidate.isActive === 'boolean' &&
+      candidate.createdAt &&
+      candidate.updatedAt,
+  );
+}
+
+export function useAuth(initialUser: SessionUser | null = null) {
+  const [user, setUser] = useState<SessionUser | null>(initialUser);
+  const [loading, setLoading] = useState(!initialUser);
 
   useEffect(() => {
-    const controller = new AbortController();
+    let active = true;
 
-    fetch('/api/auth/session', {
-      cache: 'no-store',
-      credentials: 'same-origin',
-      signal: controller.signal,
-    })
-      .then(async (res) => {
+    const loadSession = async (showLoading = false) => {
+      if (showLoading) {
+        setLoading(true);
+      }
+
+      try {
+        const res = await fetch('/api/auth/session', {
+          cache: 'no-store',
+          credentials: 'same-origin',
+        });
         const data = await res.json().catch(() => ({ user: null }));
-        setUser(res.ok ? (data.user ?? null) : null);
-      })
-      .catch(() => {
-        if (!controller.signal.aborted) {
+
+        if (!active) {
+          return;
+        }
+
+        setUser(res.ok && isSessionUser(data.user) ? data.user : null);
+      } catch {
+        if (!active) {
+          return;
+        }
+
+        if (!initialUser) {
           setUser(null);
         }
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) {
+      } finally {
+        if (active) {
           setLoading(false);
         }
-      });
+      }
+    };
 
-    return () => controller.abort();
-  }, []);
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        void loadSession();
+      }
+    };
+
+    const handlePageShow = () => {
+      void loadSession();
+    };
+
+    void loadSession(!initialUser);
+    window.addEventListener('pageshow', handlePageShow);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      active = false;
+      window.removeEventListener('pageshow', handlePageShow);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [initialUser]);
 
   return { user, loading };
 }
