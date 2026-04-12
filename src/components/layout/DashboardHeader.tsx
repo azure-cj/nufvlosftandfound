@@ -4,15 +4,21 @@ import { FormEvent, useEffect, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { getDashboardTitle } from '@/components/layout/dashboard-config';
 import { useDebounce } from '@/hooks/useDebounce';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth, type SessionUser } from '@/hooks/useAuth';
 import { getUserDisplayName } from '@/lib/utils';
 
-export function DashboardHeader({ onMenuToggle }: { onMenuToggle?: () => void }) {
+export function DashboardHeader({
+  initialUser,
+  onMenuToggle,
+}: {
+  initialUser?: SessionUser | null;
+  onMenuToggle?: () => void;
+}) {
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
   const searchParamsString = searchParams.toString();
-  const { user, loading } = useAuth();
+  const { user, loading } = useAuth(initialUser ?? null);
   const [search, setSearch] = useState(searchParams.get('search') ?? '');
   const debouncedSearch = useDebounce(search, 300);
   const title = getDashboardTitle(pathname);

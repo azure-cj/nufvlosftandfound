@@ -8,19 +8,21 @@ import {
   isDashboardItemActive,
   type DashboardNavItem,
 } from '@/components/layout/dashboard-config';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth, type SessionUser } from '@/hooks/useAuth';
 import { isOwnerEmail } from '@/lib/owner';
 import { cn } from '@/lib/utils';
 
 export function Sidebar({
+  initialUser,
   mobileOpen = false,
   onClose,
 }: {
+  initialUser?: SessionUser | null;
   mobileOpen?: boolean;
   onClose?: () => void;
 }) {
   const pathname = usePathname();
-  const { user } = useAuth();
+  const { user } = useAuth(initialUser ?? null);
   const isOwner = isOwnerEmail(user?.email);
   const isAdmin = user?.role === 'ADMIN' || isOwner;
 
@@ -35,6 +37,7 @@ export function Sidebar({
 
     const active = isDashboardItemActive(pathname, item);
     const Icon = item.icon;
+    const opensInNewTab = item.href === '/';
 
     return (
       <Link
@@ -47,6 +50,8 @@ export function Sidebar({
         )}
         href={item.href}
         onClick={onClose}
+        rel={opensInNewTab ? 'noreferrer' : undefined}
+        target={opensInNewTab ? '_blank' : undefined}
         title={item.label}
       >
         <Icon
