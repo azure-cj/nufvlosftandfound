@@ -6,7 +6,7 @@ import {
   getAuthCookieName,
   getAuthCookieOptions,
 } from '@/lib/auth';
-import { requireAuthenticatedPayload } from '@/lib/admin';
+import { requireAdminPayload } from '@/lib/admin';
 import { prisma } from '@/lib/prisma';
 
 const profileSchema = z.object({
@@ -24,7 +24,7 @@ function splitDisplayName(displayName: string) {
 
 export async function PATCH(request: NextRequest) {
   try {
-    const admin = await requireAuthenticatedPayload(request);
+    const admin = await requireAdminPayload(request);
 
     if (!admin) {
       return NextResponse.json({ message: 'Forbidden.' }, { status: 403 });
