@@ -77,17 +77,73 @@ export async function getItemsPage(
   searchParams: RawSearchParams,
   defaults?: { status?: string; take?: number; publicOnly?: boolean },
 ) {
-  const filters = parseItemFilters(searchParams, defaults);
-  const pageSize = defaults?.take ?? ITEMS_PER_PAGE;
-  const where = buildItemWhere(searchParams, defaults);
-  const skip = (filters.page - 1) * pageSize;
+  try {
+    const filters = parseItemFilters(searchParams, defaults);
+    const pageSize = defaults?.take ?? ITEMS_PER_PAGE;
+    const where = buildItemWhere(searchParams, defaults);
+    const skip = (filters.page - 1) * pageSize;
 
-  const [items, totalItems] = await Promise.all([
-    prisma.item.findMany({
-      where,
-      orderBy: { dateReported: 'desc' },
-      skip,
-      take: pageSize,
+    const [items, totalItems] = await Promise.all([
+      prisma.item.findMany({
+        where,
+        orderBy: { dateReported: 'desc' },
+        skip,
+        take: pageSize,
+        include: {
+          reporter: {
+            select: {
+              id: true,
+              username: true,
+              email: true,
+              firstName: true,
+              lastName: true,
+            },
+          },
+          claimer: {
+            select: {
+              id: true,
+              username: true,
+              email: true,
+              firstName: true,
+              lastName: true,
+            },
+          },
+        },
+      }),
+      prisma.item.count({ where }),
+    ]);
+
+    return {
+      items: items as unknown as Item[],
+      filters,
+      pagination: {
+        page: filters.page,
+        pageSize,
+        totalItems,
+        totalPages: Math.max(1, Math.ceil(totalItems / pageSize)),
+      },
+    };
+  } catch (error) {
+    console.error('getItemsPage error:', error);
+    const filters = parseItemFilters(searchParams, defaults);
+    const pageSize = defaults?.take ?? ITEMS_PER_PAGE;
+    return {
+      items: [],
+      filters,
+      pagination: {
+        page: 1,
+        pageSize,
+        totalItems: 0,
+        totalPages: 1,
+      },
+    };
+  }
+}
+
+export async function getItemById(id: string) {
+  try {
+    const item = await prisma.item.findUnique({
+      where: { id },
       include: {
         reporter: {
           select: {
@@ -108,46 +164,11 @@ export async function getItemsPage(
           },
         },
       },
-    }),
-    prisma.item.count({ where }),
-  ]);
+    });
 
-  return {
-    items: items as unknown as Item[],
-    filters,
-    pagination: {
-      page: filters.page,
-      pageSize,
-      totalItems,
-      totalPages: Math.max(1, Math.ceil(totalItems / pageSize)),
-    },
-  };
-}
-
-export async function getItemById(id: string) {
-  const item = await prisma.item.findUnique({
-    where: { id },
-    include: {
-      reporter: {
-        select: {
-          id: true,
-          username: true,
-          email: true,
-          firstName: true,
-          lastName: true,
-        },
-      },
-      claimer: {
-        select: {
-          id: true,
-          username: true,
-          email: true,
-          firstName: true,
-          lastName: true,
-        },
-      },
-    },
-  });
-
-  return item as unknown as Item | null;
+    return item as unknown as Item | null;
+  } catch (error) {
+    console.error('getItemById error:', error);
+    return null;
+  }
 }
