@@ -83,6 +83,13 @@ export async function PATCH(
       return NextResponse.json({ message: 'Item not found.' }, { status: 404 });
     }
 
+    const isOwner = existingItem.reporterId === currentUser.id;
+    const isAdmin = currentUser.role === 'ADMIN';
+
+    if (!isOwner && !isAdmin) {
+      return NextResponse.json({ message: 'Forbidden.' }, { status: 403 });
+    }
+
     const json = await request.json();
     const parsed = itemUpdateSchema.safeParse(json);
     const normalizedStatus =
@@ -189,6 +196,13 @@ export async function DELETE(
 
     if (!existingItem) {
       return NextResponse.json({ message: 'Item not found.' }, { status: 404 });
+    }
+
+    const isOwner = existingItem.reporterId === currentUser.id;
+    const isAdmin = currentUser.role === 'ADMIN';
+
+    if (!isOwner && !isAdmin) {
+      return NextResponse.json({ message: 'Forbidden.' }, { status: 403 });
     }
 
     const deletedFrom = request.headers.get('x-delete-source') ?? 'UNKNOWN';
