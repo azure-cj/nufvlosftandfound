@@ -1,7 +1,7 @@
 import { subDays } from 'date-fns';
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuthenticatedPayload } from '@/lib/admin';
 import { createAuditLog } from '@/lib/audit';
+import { getOwnerUser, requireOwnerPinAccess } from '@/lib/ownerGuard';
 import { prisma } from '@/lib/prisma';
 
 function getCutoffDate() {
@@ -9,10 +9,11 @@ function getCutoffDate() {
 }
 
 export async function GET(request: NextRequest) {
-  const guard = await requireAuthenticatedPayload(request);
-
+  // NOTE: requireOwnerPinAccess() returns NULL on SUCCESS (authorized owner with valid PIN session),
+  // and returns a NextResponse error object on FAILURE (403, 423, or 428).
+  const guard = await requireOwnerPinAccess(request);
   if (guard) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    return guard;
   }
 
   const cutoff = getCutoffDate();
@@ -31,8 +32,14 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const owner = await requireAuthenticatedPayload(request);
+  // NOTE: requireOwnerPinAccess() returns NULL on SUCCESS (authorized owner with valid PIN session),
+  // and returns a NextResponse error object on FAILURE (403, 423, or 428).
+  const guard = await requireOwnerPinAccess(request);
+  if (guard) {
+    return guard;
+  }
 
+  const owner = await getOwnerUser(request);
   if (!owner) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
   }
@@ -55,10 +62,10 @@ export async function POST(request: NextRequest) {
   });
 
   await createAuditLog({
-    userId: owner.userId,
+    userId: owner.id,
     action: 'OWNER_CLEARED_OLD_AUDIT_LOGS',
     entityType: 'OWNER',
-    entityId: owner.userId,
+    entityId: owner.id,
     details: {
       cutoff: cutoff.toISOString(),
       requestedCount: count,

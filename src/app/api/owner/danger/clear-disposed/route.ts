@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuthenticatedPayload } from '@/lib/admin';
 import { createAuditLog } from '@/lib/audit';
+import { getOwnerUser, requireOwnerPinAccess } from '@/lib/ownerGuard';
 import { prisma } from '@/lib/prisma';
 
 const disposedWhere = {
@@ -8,10 +8,11 @@ const disposedWhere = {
 };
 
 export async function GET(request: NextRequest) {
-  const guard = await requireAuthenticatedPayload(request);
-
+  // NOTE: requireOwnerPinAccess() returns NULL on SUCCESS (authorized owner with valid PIN session),
+  // and returns a NextResponse error object on FAILURE (403, 423, or 428).
+  const guard = await requireOwnerPinAccess(request);
   if (guard) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    return guard;
   }
 
   const count = await prisma.item.count({ where: disposedWhere });
@@ -19,8 +20,14 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const owner = await requireAuthenticatedPayload(request);
+  // NOTE: requireOwnerPinAccess() returns NULL on SUCCESS (authorized owner with valid PIN session),
+  // and returns a NextResponse error object on FAILURE (403, 423, or 428).
+  const guard = await requireOwnerPinAccess(request);
+  if (guard) {
+    return guard;
+  }
 
+  const owner = await getOwnerUser(request);
   if (!owner) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
   }
@@ -29,10 +36,10 @@ export async function POST(request: NextRequest) {
   const result = await prisma.item.deleteMany({ where: disposedWhere });
 
   await createAuditLog({
-    userId: owner.userId,
+    userId: owner.id,
     action: 'OWNER_CLEARED_DISPOSED_ITEMS',
     entityType: 'OWNER',
-    entityId: owner.userId,
+    entityId: owner.id,
     details: {
       requestedCount: count,
       deletedCount: result.count,

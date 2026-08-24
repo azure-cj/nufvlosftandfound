@@ -67,9 +67,23 @@ export async function isOwnerUser(user: { id: string; email: string; role: strin
   return true;
 }
 
-export async function getOwnerUser() {
-  const cookieStore = await cookies();
-  const token = cookieStore.get(getAuthCookieName())?.value;
+export async function getOwnerUser(request?: NextRequest) {
+  let token: string | undefined;
+  const cookieName = getAuthCookieName();
+
+  if (request) {
+    token = request.cookies.get(cookieName)?.value;
+  }
+
+  if (!token) {
+    try {
+      const cookieStore = await cookies();
+      token = cookieStore.get(cookieName)?.value;
+    } catch {
+      // Ignored if outside request store context
+    }
+  }
+
   const payload = token ? await verifyJWT(token) : null;
 
   if (!payload?.userId) {
@@ -98,8 +112,8 @@ export async function getOwnerUser() {
   return user;
 }
 
-export async function requireOwner() {
-  const owner = await getOwnerUser();
+export async function requireOwner(request?: NextRequest) {
+  const owner = await getOwnerUser(request);
 
   if (!owner) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
@@ -108,9 +122,22 @@ export async function requireOwner() {
   return null;
 }
 
-export async function hasOwnerPinSession(expectedUserId?: string) {
-  const cookieStore = await cookies();
-  const token = cookieStore.get(getOwnerPinCookieName())?.value;
+export async function hasOwnerPinSession(expectedUserId?: string, request?: NextRequest) {
+  let token: string | undefined;
+  const pinCookieName = getOwnerPinCookieName();
+
+  if (request) {
+    token = request.cookies.get(pinCookieName)?.value;
+  }
+
+  if (!token) {
+    try {
+      const cookieStore = await cookies();
+      token = cookieStore.get(pinCookieName)?.value;
+    } catch {
+      // Ignored if outside request store context
+    }
+  }
 
   if (!token) {
     return false;
@@ -125,8 +152,8 @@ export async function hasOwnerPinSession(expectedUserId?: string) {
   return expectedUserId ? payload.userId === expectedUserId : true;
 }
 
-export async function requireOwnerPinAccess() {
-  const owner = await getOwnerUser();
+export async function requireOwnerPinAccess(request?: NextRequest) {
+  const owner = await getOwnerUser(request);
 
   if (!owner) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
@@ -137,7 +164,7 @@ export async function requireOwnerPinAccess() {
     return NextResponse.json({ error: 'Owner PIN setup required', isPinSet: false }, { status: 428 });
   }
 
-  const hasPin = await hasOwnerPinSession(owner.id);
+  const hasPin = await hasOwnerPinSession(owner.id, request);
 
   if (!hasPin) {
     return NextResponse.json({ error: 'Owner PIN required' }, { status: 423 });
