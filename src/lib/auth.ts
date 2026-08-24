@@ -194,8 +194,12 @@ export async function getAuthPayloadFromRequest(request: NextRequest) {
   }
 
   if (!token) {
-    const cookieStore = await cookies();
-    token = cookieStore.get(cookieName)?.value;
+    try {
+      const cookieStore = await cookies();
+      token = cookieStore.get(cookieName)?.value;
+    } catch {
+      // Ignored if outside request store context
+    }
   }
 
   if (!token) {
@@ -229,33 +233,6 @@ async function getAuthenticatedUserById(userId: string): Promise<AuthenticatedUs
   return user;
 }
 
-export async function getFallbackAuthenticatedUser(): Promise<AuthenticatedUser | null> {
-  const adminUser = await prisma.user.findFirst({
-    where: {
-      isActive: true,
-      role: 'ADMIN',
-    },
-    orderBy: {
-      createdAt: 'asc',
-    },
-    select: authUserSelect,
-  });
-
-  if (adminUser) {
-    return adminUser;
-  }
-
-  return prisma.user.findFirst({
-    where: {
-      isActive: true,
-    },
-    orderBy: {
-      createdAt: 'asc',
-    },
-    select: authUserSelect,
-  });
-}
-
 export async function getCurrentUser() {
   const cookieStore = await cookies();
   const token = cookieStore.get(getAuthCookieName())?.value;
@@ -284,5 +261,6 @@ export async function getAuthenticatedUserFromRequest(request: NextRequest) {
     }
   }
 
-  return getFallbackAuthenticatedUser();
+  return null;
 }
+

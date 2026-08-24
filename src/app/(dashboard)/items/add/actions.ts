@@ -3,7 +3,7 @@
 import { Prisma } from '@prisma/client';
 import { z } from 'zod';
 import { createAuditLog } from '@/lib/audit';
-import { getFallbackAuthenticatedUser } from '@/lib/auth';
+import { getCurrentUser } from '@/lib/auth';
 import { ITEM_CATEGORIES } from '@/lib/constants';
 import { generateItemCode } from '@/lib/itemCode';
 import { prisma } from '@/lib/prisma';
@@ -69,6 +69,7 @@ export async function submitLegacyAddItem(
     };
   }
 
+  const currentUser = await getCurrentUser();
   const reporter = reporterId
     ? await prisma.user.findUnique({
         where: { id: reporterId },
@@ -77,7 +78,7 @@ export async function submitLegacyAddItem(
           isActive: true,
         },
       })
-    : await getFallbackAuthenticatedUser();
+    : currentUser;
 
   if (!reporter?.isActive) {
     return {

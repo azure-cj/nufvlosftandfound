@@ -17,4 +17,4 @@ pnpm-debug.log*
 Thumbs.db
 prisma/dev.db
 generated
-
+*.sql
