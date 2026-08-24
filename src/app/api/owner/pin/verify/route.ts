@@ -1,5 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getOwnerUser, createOwnerPinSession, getOwnerPinCookieName, getOwnerPinCookieOptions, requireOwner, verifyOwnerPin } from '@/lib/ownerGuard';
+import {
+  createOwnerPinSession,
+  getOwnerPinCookieName,
+  getOwnerPinCookieOptions,
+  getOwnerUser,
+  isOwnerPinSet,
+  requireOwner,
+  updateOwnerPin,
+  verifyOwnerPin,
+} from '@/lib/ownerGuard';
+
+export async function GET(request: NextRequest) {
+  const guard = await requireOwner();
+
+  if (guard) {
+    return guard;
+  }
+
+  const isPinSet = await isOwnerPinSet();
+  return NextResponse.json({ isPinSet });
+}
 
 export async function POST(request: NextRequest) {
   const guard = await requireOwner();
@@ -14,10 +34,22 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ message: 'Unauthorized.' }, { status: 403 });
   }
 
-  const { pin } = (await request.json().catch(() => ({ pin: '' }))) as { pin?: string };
+  const body = (await request.json().catch(() => ({}))) as { pin?: string; setupPin?: string };
+  const pin = body.pin || body.setupPin;
 
   if (!pin || !/^\d{4}$/.test(pin)) {
-    return NextResponse.json({ message: 'Enter the 4-digit owner PIN.' }, { status: 400 });
+    return NextResponse.json({ message: 'Enter a valid 4-digit PIN.' }, { status: 400 });
+  }
+
+  const pinSet = await isOwnerPinSet();
+
+  if (!pinSet) {
+    // Initial PIN setup flow: set up PIN for the first time
+    await updateOwnerPin(pin);
+    const token = await createOwnerPinSession(owner.id);
+    const response = NextResponse.json({ message: 'Owner PIN setup complete.', isPinSet: true });
+    response.cookies.set(getOwnerPinCookieName(), token, getOwnerPinCookieOptions());
+    return response;
   }
 
   const valid = await verifyOwnerPin(pin);

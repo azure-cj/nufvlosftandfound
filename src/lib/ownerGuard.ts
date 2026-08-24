@@ -9,11 +9,11 @@ import {
   verifyOwnerPinJWT,
 } from './auth';
 import {
-  OWNER_DEFAULT_PIN,
+  OWNER_EMAIL_SETTING_KEY,
   OWNER_PIN_COOKIE_NAME,
   OWNER_PIN_MAX_AGE,
   OWNER_PIN_SETTING_KEY,
-  isOwnerEmail,
+  normalizeEmail,
 } from './owner';
 import { prisma } from './prisma';
 
@@ -38,23 +38,33 @@ export function getExpiredOwnerPinCookieOptions() {
   };
 }
 
-async function getOwnerPinSetting() {
-  const existing = await prisma.setting.findUnique({
+export async function getOwnerPinSetting() {
+  return prisma.setting.findUnique({
     where: {
       key: OWNER_PIN_SETTING_KEY,
     },
   });
+}
 
-  if (existing) {
-    return existing;
+export async function isOwnerPinSet() {
+  const setting = await getOwnerPinSetting();
+  return Boolean(setting?.value && setting.value.trim().length > 0);
+}
+
+export async function isOwnerUser(user: { id: string; email: string; role: string; isActive: boolean }) {
+  if (!user.isActive || user.role?.toString().trim().toUpperCase() !== 'ADMIN') {
+    return false;
   }
 
-  return prisma.setting.create({
-    data: {
-      key: OWNER_PIN_SETTING_KEY,
-      value: await hashPassword(OWNER_DEFAULT_PIN),
-    },
+  const ownerSetting = await prisma.setting.findUnique({
+    where: { key: OWNER_EMAIL_SETTING_KEY },
   });
+
+  if (ownerSetting?.value) {
+    return normalizeEmail(user.email) === normalizeEmail(ownerSetting.value);
+  }
+
+  return true;
 }
 
 export async function getOwnerUser() {
@@ -81,7 +91,7 @@ export async function getOwnerUser() {
     },
   });
 
-  if (!user || !user.isActive || !isOwnerEmail(user.email)) {
+  if (!user || !(await isOwnerUser(user))) {
     return null;
   }
 
@@ -122,6 +132,11 @@ export async function requireOwnerPinAccess() {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
   }
 
+  const pinSet = await isOwnerPinSet();
+  if (!pinSet) {
+    return NextResponse.json({ error: 'Owner PIN setup required', isPinSet: false }, { status: 428 });
+  }
+
   const hasPin = await hasOwnerPinSession(owner.id);
 
   if (!hasPin) {
@@ -133,6 +148,9 @@ export async function requireOwnerPinAccess() {
 
 export async function verifyOwnerPin(pin: string) {
   const setting = await getOwnerPinSetting();
+  if (!setting?.value) {
+    return false;
+  }
   return comparePassword(pin, setting.value);
 }
 
@@ -150,6 +168,12 @@ export async function updateOwnerPin(pin: string) {
       key: OWNER_PIN_SETTING_KEY,
       value: hashedPin,
     },
+  });
+}
+
+export async function deleteOwnerPin() {
+  return prisma.setting.deleteMany({
+    where: { key: OWNER_PIN_SETTING_KEY },
   });
 }
 
