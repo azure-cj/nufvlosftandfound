@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { generatePasswordResetEmail, getAppUrl, sendEmail } from '@/lib/email';
 import { prisma } from '@/lib/prisma';
+import { checkRateLimit, getClientIp } from '@/lib/rateLimit';
 
 const forgotPasswordSchema = z.object({
   email: z.string().trim().email('A valid email address is required.'),
@@ -11,7 +12,23 @@ const forgotPasswordSchema = z.object({
 const GENERIC_MESSAGE =
   'If an account exists with this email, a reset link has been sent.';
 
+// 5 password-reset requests per 60 minutes per IP
+const FORGOT_LIMIT = 5;
+const FORGOT_WINDOW_MS = 60 * 60 * 1000;
+
 export async function POST(request: Request) {
+  const ip = getClientIp(request);
+  const rl = checkRateLimit(`forgot:${ip}`, FORGOT_LIMIT, FORGOT_WINDOW_MS);
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { message: 'Too many password reset requests. Please try again later.' },
+      {
+        status: 429,
+        headers: { 'Retry-After': String(Math.ceil(rl.resetMs / 1000)) },
+      },
+    );
+  }
+
   try {
     const json = await request.json();
     const parsed = forgotPasswordSchema.safeParse(json);

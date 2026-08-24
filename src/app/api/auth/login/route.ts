@@ -7,9 +7,26 @@ import {
   getAuthCookieOptions,
 } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { checkRateLimit, getClientIp } from '@/lib/rateLimit';
 import { loginIdentifierSchema } from '@/lib/validations';
 
+// 10 login attempts per 15 minutes per IP
+const LOGIN_LIMIT = 10;
+const LOGIN_WINDOW_MS = 15 * 60 * 1000;
+
 export async function POST(request: Request) {
+  const ip = getClientIp(request);
+  const rl = checkRateLimit(`login:${ip}`, LOGIN_LIMIT, LOGIN_WINDOW_MS);
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { message: 'Too many login attempts. Please try again later.' },
+      {
+        status: 429,
+        headers: { 'Retry-After': String(Math.ceil(rl.resetMs / 1000)) },
+      },
+    );
+  }
+
   try {
     const json = await request.json();
     const parsed = loginIdentifierSchema.safeParse(json);
@@ -27,12 +44,6 @@ export async function POST(request: Request) {
     const identifier = parsed.data.email.trim();
     const normalizedEmail = identifier.toLowerCase();
     const isEmailLogin = identifier.includes('@');
-
-    console.info('[LOGIN] attempt received', {
-      identifier,
-      type: isEmailLogin ? 'email' : 'username',
-      rememberMe: parsed.data.rememberMe,
-    });
 
     const user = await prisma.user.findFirst({
       where: {
@@ -55,23 +66,11 @@ export async function POST(request: Request) {
       },
     });
 
-    console.info('[LOGIN] user lookup result', user
-      ? {
-          id: user.id,
-          email: user.email,
-          username: user.username,
-          isActive: user.isActive,
-          role: user.role,
-        }
-      : null);
-
     if (!user) {
-      console.info('[LOGIN] rejected: no matching user');
       return NextResponse.json({ message: 'Invalid credentials.' }, { status: 401 });
     }
 
     if (!user.isActive) {
-      console.info('[LOGIN] rejected: account inactive');
       return NextResponse.json(
         { message: 'This account has been deactivated. Contact an administrator.' },
         { status: 403 },
@@ -79,13 +78,8 @@ export async function POST(request: Request) {
     }
 
     const passwordMatches = await comparePassword(parsed.data.password, user.password);
-    console.info('[LOGIN] password match result', {
-      userId: user.id,
-      passwordMatches,
-    });
 
     if (!passwordMatches) {
-      console.info('[LOGIN] rejected: password mismatch');
       return NextResponse.json({ message: 'Invalid credentials.' }, { status: 401 });
     }
 
@@ -97,18 +91,12 @@ export async function POST(request: Request) {
       rememberMe: parsed.data.rememberMe,
     });
 
-    console.info('[LOGIN] success', {
-      userId: user.id,
-      email: user.email,
-      rememberMe: parsed.data.rememberMe,
-    });
-
     await createAuditLog({
       userId: user.id,
       action: 'USER_LOGIN',
       entityType: 'AUTH',
       entityId: user.id,
-      details: { identifier },
+      details: { loginType: isEmailLogin ? 'email' : 'username' },
       request,
     });
 

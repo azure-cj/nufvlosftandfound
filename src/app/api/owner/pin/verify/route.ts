@@ -9,6 +9,12 @@ import {
   updateOwnerPin,
   verifyOwnerPin,
 } from '@/lib/ownerGuard';
+import { checkRateLimit, getClientIp } from '@/lib/rateLimit';
+
+// Strict limit: 5 PIN attempts per 15 minutes per IP.
+// The 4-digit PIN space is only 10,000 combinations — brute force must be blocked hard.
+const PIN_LIMIT = 5;
+const PIN_WINDOW_MS = 15 * 60 * 1000;
 
 export async function GET(request: NextRequest) {
   const guard = await requireOwner();
@@ -22,6 +28,18 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const ip = getClientIp(request);
+  const rl = checkRateLimit(`owner-pin:${ip}`, PIN_LIMIT, PIN_WINDOW_MS);
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { message: 'Too many PIN attempts. Please try again later.' },
+      {
+        status: 429,
+        headers: { 'Retry-After': String(Math.ceil(rl.resetMs / 1000)) },
+      },
+    );
+  }
+
   const guard = await requireOwner();
 
   if (guard) {

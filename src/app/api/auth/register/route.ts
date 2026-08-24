@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createAuditLog } from '@/lib/audit';
 import { createJWT, getAuthCookieName, getAuthCookieOptions, hashPassword } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { checkRateLimit, getClientIp } from '@/lib/rateLimit';
 import { registerSchema } from '@/lib/validations';
 
 function normalizeOptionalString(value?: string) {
@@ -9,7 +10,23 @@ function normalizeOptionalString(value?: string) {
   return trimmed ? trimmed : undefined;
 }
 
+// 5 registration attempts per 15 minutes per IP
+const REGISTER_LIMIT = 5;
+const REGISTER_WINDOW_MS = 15 * 60 * 1000;
+
 export async function POST(request: Request) {
+  const ip = getClientIp(request);
+  const rl = checkRateLimit(`register:${ip}`, REGISTER_LIMIT, REGISTER_WINDOW_MS);
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { message: 'Too many registration attempts. Please try again later.' },
+      {
+        status: 429,
+        headers: { 'Retry-After': String(Math.ceil(rl.resetMs / 1000)) },
+      },
+    );
+  }
+
   try {
     const json = await request.json();
     const parsed = registerSchema.safeParse(json);

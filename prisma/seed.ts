@@ -1,13 +1,19 @@
 import { PrismaClient, type ItemStatus, type UserRole } from '@prisma/client';
+import crypto from 'node:crypto';
 import { subDays } from 'date-fns';
 import { hashPassword } from '../src/lib/auth';
 
 const prisma = new PrismaClient();
 
+// Admin seed password: supply via SEED_ADMIN_PASSWORD env var, or one is randomly generated and
+// printed ONCE to the console. Never use a hardcoded default password in production.
+const SEED_ADMIN_PASSWORD =
+  process.env.SEED_ADMIN_PASSWORD ?? crypto.randomBytes(20).toString('hex');
+
 const adminSeed = {
   email: 'admin@nufv.edu',
   username: 'admin',
-  password: 'admin123',
+  password: SEED_ADMIN_PASSWORD,
   firstName: 'System',
   lastName: 'Administrator',
   role: 'ADMIN' as UserRole,
@@ -250,7 +256,11 @@ async function main() {
   }
 
   console.log('Seed complete.');
-  console.log('Admin login: admin@nufv.edu / admin123');
+  if (!process.env.SEED_ADMIN_PASSWORD) {
+    console.log(`Admin login: admin@nufv.edu / ${SEED_ADMIN_PASSWORD}  ← SAVE THIS; it will not be shown again.`);
+  } else {
+    console.log('Admin login: admin@nufv.edu / <SEED_ADMIN_PASSWORD env var>');
+  }
   console.log(`Created ${sampleItems.length} sample items and ${reporters.length} users.`);
 }
 
