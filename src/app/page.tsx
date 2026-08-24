@@ -3,7 +3,6 @@ import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { HeroSection } from '@/components/public/HeroSection';
 import { HowToClaim } from '@/components/public/HowToClaim';
-import { SupportDeveloperFloatingButton } from '@/components/public/SupportDeveloperFloatingButton';
 import { SurveyWidget } from '@/components/SurveyWidget';
 import { getItemsPage } from '@/lib/items';
 
@@ -40,7 +39,6 @@ export default async function Page({
       </main>
 
       <Footer />
-      <SupportDeveloperFloatingButton />
       <SurveyWidget />
     </div>
   );
