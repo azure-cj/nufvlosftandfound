@@ -2,7 +2,7 @@ import { put } from '@vercel/blob';
 import { NextRequest, NextResponse } from 'next/server';
 import { createAuditLog } from '@/lib/audit';
 import { getAuthenticatedUserFromRequest } from '@/lib/auth';
-import { sanitizeFileName, uploadConfig } from '@/lib/upload';
+import { generateRandomFileName, uploadConfig, validateImageMagicBytes } from '@/lib/upload';
 
 export async function POST(request: NextRequest) {
   try {
@@ -19,15 +19,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: 'Please provide an image file.' }, { status: 400 });
     }
 
-    if (!uploadConfig.allowedMimeTypes.includes(file.type)) {
-      return NextResponse.json(
-        {
-          message: `Unsupported file type. Allowed: ${uploadConfig.allowedMimeTypes.join(', ')}`,
-        },
-        { status: 400 },
-      );
-    }
-
     if (file.size > uploadConfig.maxFileSize) {
       return NextResponse.json(
         {
@@ -37,15 +28,33 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const blob = await put(`items/${sanitizeFileName(file.name)}`, file, {
+    // Inspect file header magic bytes
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = new Uint8Array(arrayBuffer);
+    const magicResult = validateImageMagicBytes(buffer);
+
+    if (!magicResult.valid || !magicResult.extension || !magicResult.mimeType) {
+      return NextResponse.json(
+        {
+          message: `Invalid image format or corrupted file signature. Allowed: ${uploadConfig.allowedMimeTypes.join(', ')}`,
+        },
+        { status: 400 },
+      );
+    }
+
+    // Generate random server-side filename; do not rely on client-supplied name or extension
+    const safeFileName = generateRandomFileName(magicResult.extension);
+
+    const blob = await put(`items/${safeFileName}`, file, {
       access: 'public',
+      contentType: magicResult.mimeType,
     });
 
     await createAuditLog({
       userId: currentUser.id,
       action: 'ITEM_IMAGE_UPLOADED',
       entityType: 'ITEM',
-      details: { fileName: file.name, url: blob.url },
+      details: { storedFileName: safeFileName, url: blob.url },
       request,
     });
 

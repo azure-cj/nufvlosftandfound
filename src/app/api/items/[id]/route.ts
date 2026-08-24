@@ -45,13 +45,28 @@ async function getExistingItem(id: string) {
   });
 }
 
-export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
     const item = await getExistingItem(id);
 
     if (!item) {
       return NextResponse.json({ message: 'Item not found.' }, { status: 404 });
+    }
+
+    const currentUser = await getAuthenticatedUserFromRequest(request);
+    const isReporter = currentUser && item.reporterId === currentUser.id;
+    const isAdmin = currentUser && currentUser.role === 'ADMIN';
+
+    if (!isReporter && !isAdmin) {
+      const {
+        claimerIdNumber: _claimerIdNumber,
+        contactInfo: _contactInfo,
+        verificationNotes: _verificationNotes,
+        ...safeItem
+      } = item as any;
+
+      return NextResponse.json({ item: safeItem });
     }
 
     return NextResponse.json({ item });

@@ -50,7 +50,7 @@ function buildDateRangeWhere(field: 'createdAt' | 'dateReported', dateFrom?: str
 }
 
 export function hasAdminConsoleAccess(user: Pick<AdminSessionUser, 'email' | 'role' | 'isActive'>) {
-  return user.isActive;
+  return Boolean(user.isActive && user.role?.toString().trim().toUpperCase() === 'ADMIN');
 }
 
 export async function getAuthenticatedUserFromCookies() {

@@ -3,10 +3,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
 function isAuthorized(request: NextRequest) {
-  if (process.env.NODE_ENV !== 'production') {
-    return true;
-  }
-
   const secret = process.env.CRON_SECRET;
 
   if (!secret) {
