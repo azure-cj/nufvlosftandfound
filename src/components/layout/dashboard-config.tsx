@@ -111,15 +111,6 @@ function SettingsIcon(props: SVGProps<SVGSVGElement>) {
   );
 }
 
-function ShieldIcon(props: SVGProps<SVGSVGElement>) {
-  return (
-    <BaseIcon {...props}>
-      <path d="M12 3 5 6v5c0 4.2 2.7 8 7 10 4.3-2 7-5.8 7-10V6l-7-3Z" />
-      <path d="m9.5 12 1.7 1.7 3.3-3.7" />
-    </BaseIcon>
-  );
-}
-
 function ExternalLinkIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <BaseIcon {...props}>
@@ -226,13 +217,6 @@ export const dashboardNavGroups: Array<{
         matches: [/^\/admin\/settings$/],
       },
       {
-        href: '/admin/database',
-        label: 'Database',
-        icon: ShieldIcon,
-        adminOnly: true,
-        matches: [/^\/admin\/database$/, /^\/dashboard\/admin\/database$/, /^\/owner$/],
-      },
-      {
         href: '/',
         label: 'View Public Site',
         icon: ExternalLinkIcon,
@@ -261,8 +245,6 @@ const dashboardTitleMap: Array<{ match: RegExp; title: string }> = [
   { match: /^\/admin\/reports$/, title: 'Reports' },
   { match: /^\/admin\/audit-logs$/, title: 'Audit Logs' },
   { match: /^\/admin\/settings$/, title: 'Settings' },
-  { match: /^\/admin\/database$/, title: 'Database' },
-  { match: /^\/dashboard\/admin\/database$/, title: 'Database' },
   { match: /^\/admin\/import$/, title: 'CSV Import' },
 ];
 

@@ -250,7 +250,10 @@ export async function getAuditLogsPageData({
       skip: (page - 1) * ITEMS_PER_PAGE,
       take: ITEMS_PER_PAGE,
       orderBy: { createdAt: 'desc' },
-      include: {
+      select: {
+        id: true,
+        action: true,
+        createdAt: true,
         user: {
           select: {
             id: true,
