@@ -11,6 +11,7 @@ import { ClaimItemModal } from '@/components/items/ClaimItemModal';
 import { DisposeItemModal } from '@/components/items/DisposeItemModal';
 import { ItemDetailModal } from '@/components/items/ItemDetailModal';
 import { ItemStatusBadge } from '@/components/items/ItemStatusBadge';
+import { SmartPagination } from '@/components/ui/SmartPagination';
 import { Toast } from '@/components/ui/Toast';
 import type { SessionUser } from '@/hooks/useAuth';
 
@@ -756,30 +757,11 @@ export function ManageItemsDashboard({
             </table>
           </div>
         )}
-      </div>
-
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-sm text-slate-500 dark:text-slate-400">
-          Page {result.pagination.page} of {result.pagination.totalPages}
-        </p>
-        <div className="flex items-center gap-2">
-          <button
-            className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-indigo-400 hover:text-indigo-600 disabled:cursor-not-allowed disabled:opacity-50 dark:border-[#334155] dark:text-slate-200 dark:hover:border-indigo-400 dark:hover:text-indigo-300"
-            disabled={result.pagination.page <= 1}
-            onClick={() => setFilter('page', String(result.pagination.page - 1))}
-            type="button"
-          >
-            Previous
-          </button>
-          <button
-            className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-indigo-400 hover:text-indigo-600 disabled:cursor-not-allowed disabled:opacity-50 dark:border-[#334155] dark:text-slate-200 dark:hover:border-indigo-400 dark:hover:text-indigo-300"
-            disabled={result.pagination.page >= result.pagination.totalPages}
-            onClick={() => setFilter('page', String(result.pagination.page + 1))}
-            type="button"
-          >
-            Next
-          </button>
-        </div>
+        <SmartPagination
+          currentPage={result.pagination.page}
+          onPageChange={(p) => setFilter('page', String(p))}
+          totalPages={result.pagination.totalPages}
+        />
       </div>
 
       <ClaimItemModal

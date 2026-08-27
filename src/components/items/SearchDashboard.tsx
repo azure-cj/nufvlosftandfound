@@ -6,8 +6,8 @@ import { ITEM_CATEGORIES, ITEM_STATUSES } from '@/lib/constants';
 import { useDebounce } from '@/hooks/useDebounce';
 import type { Item } from '@/types/item';
 import { Input } from '@/components/ui/Input';
+import { SmartPagination } from '@/components/ui/SmartPagination';
 import { ItemsTable } from './ItemsTable';
-import { PaginationControls } from './PaginationControls';
 
 type SearchState = {
   search: string;
@@ -226,17 +226,9 @@ export function SearchDashboard() {
         <ItemsTable copyItemCode items={result.items} />
       )}
 
-      <PaginationControls
-        page={result.pagination.page}
-        pathname="/search"
-        query={{
-          search: filters.search || undefined,
-          category: filters.category || undefined,
-          status: filters.status || undefined,
-          location: filters.location || undefined,
-          dateFrom: filters.dateFrom || undefined,
-          dateTo: filters.dateTo || undefined,
-        }}
+      <SmartPagination
+        currentPage={result.pagination.page}
+        onPageChange={(p) => setFilters((current) => ({ ...current, page: String(p) }))}
         totalPages={result.pagination.totalPages}
       />
     </div>

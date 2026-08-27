@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { ItemsFilterBar } from '@/components/items/ItemsFilterBar';
-import { PaginationControls } from '@/components/items/PaginationControls';
+import { SmartPagination } from '@/components/ui/SmartPagination';
 import { getItemsPage } from '@/lib/items';
 import { formatDisplayDate, formatItemCode, getStoredClaimerName } from '@/lib/utils';
 
@@ -87,16 +87,8 @@ export default async function Page({
         </div>
       </div>
 
-      <PaginationControls
-        page={pagination.page}
-        pathname="/items/claimed"
-        query={{
-          category: filters.category,
-          dateFrom: filters.dateFrom,
-          dateTo: filters.dateTo,
-          search: filters.search,
-          status: 'CLAIMED',
-        }}
+      <SmartPagination
+        currentPage={pagination.page}
         totalPages={pagination.totalPages}
       />
     </div>

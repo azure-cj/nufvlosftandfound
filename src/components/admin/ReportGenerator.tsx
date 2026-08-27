@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import Link from 'next/link';
 import {
@@ -14,6 +14,7 @@ import {
   YAxis,
 } from 'recharts';
 import { Button } from '@/components/ui/Button';
+import { SmartPagination } from '@/components/ui/SmartPagination';
 import { Table } from '@/components/ui/Table';
 import type { ReportType } from '@/lib/admin';
 import { formatDisplayDate } from '@/lib/utils';
@@ -25,6 +26,13 @@ type ReportStats = {
   disposed: number;
   byDate: { date: string; count: number }[];
   byCategory: { category: string; count: number }[];
+};
+
+type Pagination = {
+  page: number;
+  pageSize: number;
+  totalItems: number;
+  totalPages: number;
 };
 
 const STATUS_COLORS = {
@@ -48,6 +56,7 @@ export function ReportGenerator({
   columns,
   rows,
   stats,
+  pagination,
 }: {
   type: ReportType;
   dateFrom?: string;
@@ -55,6 +64,7 @@ export function ReportGenerator({
   columns: string[];
   rows: Array<Record<string, unknown>>;
   stats: ReportStats;
+  pagination?: Pagination;
 }) {
   const downloadParams = new URLSearchParams();
   downloadParams.set('type', type);
@@ -323,6 +333,13 @@ export function ReportGenerator({
             </tbody>
           </table>
         </Table>
+
+        {pagination && pagination.totalPages > 1 && (
+          <SmartPagination
+            currentPage={pagination.page}
+            totalPages={pagination.totalPages}
+          />
+        )}
       </section>
     </div>
   );

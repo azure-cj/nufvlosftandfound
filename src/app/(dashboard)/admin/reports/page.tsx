@@ -34,6 +34,7 @@ export default async function Page({
         columns={preview.columns}
         dateFrom={dateFrom}
         dateTo={dateTo}
+        pagination={preview.pagination}
         rows={preview.rows as Array<Record<string, unknown>>}
         stats={stats}
         type={type}

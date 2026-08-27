@@ -1,6 +1,6 @@
 import { requireAdmin } from '@/lib/adminGuard';
 import { UserTable } from '@/components/admin/UserTable';
-import { Pagination } from '@/components/ui/Pagination';
+import { SmartPagination } from '@/components/ui/SmartPagination';
 import { getUsersPageData } from '@/lib/admin';
 
 export const dynamic = 'force-dynamic';
@@ -39,12 +39,8 @@ export default async function Page({
 
       <UserTable initialUsers={users} />
 
-      <Pagination
-        page={pagination.page}
-        pageSize={pagination.pageSize}
-        pathname="/admin/users"
-        query={{ search }}
-        totalItems={pagination.totalItems}
+      <SmartPagination
+        currentPage={pagination.page}
         totalPages={pagination.totalPages}
       />
     </div>

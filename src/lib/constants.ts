@@ -21,7 +21,7 @@ export const ITEM_CATEGORIES = [
   'Jewelry',
 ] as const;
 
-export const ITEMS_PER_PAGE = 20;
+export const ITEMS_PER_PAGE = 25;
 
 export const ITEM_STATUS_LABELS: Record<(typeof ITEM_STATUSES)[number], string> = {
   PENDING: 'Available',
