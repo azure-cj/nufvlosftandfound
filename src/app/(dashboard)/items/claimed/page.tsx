@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { ItemsFilterBar } from '@/components/items/ItemsFilterBar';
+import { RevealableName } from '@/components/ui/RevealableName';
 import { SmartPagination } from '@/components/ui/SmartPagination';
 import { getItemsPage } from '@/lib/items';
 import { formatDisplayDate, formatItemCode, getStoredClaimerName } from '@/lib/utils';
@@ -69,7 +70,9 @@ export default async function Page({
                   <td className="px-5 py-4">{item.itemName}</td>
                   <td className="px-5 py-4">{item.category}</td>
                   <td className="px-5 py-4">
-                    <div className="font-medium text-slate-900 dark:text-[#f1f5f9]">{getStoredClaimerName(item)}</div>
+                    <div className="font-medium text-slate-900 dark:text-[#f1f5f9]">
+                      <RevealableName fullName={getStoredClaimerName(item)} />
+                    </div>
                   </td>
                   <td className="px-5 py-4">{formatDisplayDate(item.claimedAt, 'MMM d, yyyy h:mm a')}</td>
                   <td className="px-5 py-4">

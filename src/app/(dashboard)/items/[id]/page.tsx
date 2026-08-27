@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { DeleteItemButton } from '@/components/items/DeleteItemButton';
 import { ItemCard } from '@/components/items/ItemCard';
 import { ItemStatusBadge } from '@/components/items/ItemStatusBadge';
+import { RevealableName } from '@/components/ui/RevealableName';
 import { getItemById } from '@/lib/items';
 import { formatDisplayDate, getStoredClaimerName, getUserDisplayName } from '@/lib/utils';
 
@@ -137,7 +138,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
                     Claimer
                   </dt>
                   <dd className="mt-1 text-slate-900 dark:text-[#f1f5f9]">
-                    {getStoredClaimerName(item)}
+                    <RevealableName fullName={getStoredClaimerName(item)} />
                   </dd>
                 </div>
                 <div>

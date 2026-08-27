@@ -3,6 +3,7 @@
 import { formatDisplayDate, getStoredClaimerName } from '@/lib/utils';
 import type { Item } from '@/types/item';
 import { Modal } from '@/components/ui/Modal';
+import { RevealableName } from '@/components/ui/RevealableName';
 
 export function ItemDetailModal({
   item,
@@ -83,7 +84,7 @@ export function ItemDetailModal({
               <div>
                 <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Claimer</p>
                 <p className="text-sm font-semibold text-slate-900 dark:text-[#f1f5f9]">
-                  {getStoredClaimerName(item)}
+                  <RevealableName fullName={getStoredClaimerName(item)} />
                 </p>
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
