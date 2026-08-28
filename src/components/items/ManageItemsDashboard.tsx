@@ -12,6 +12,7 @@ import { DisposeItemModal } from '@/components/items/DisposeItemModal';
 import { ItemDetailModal } from '@/components/items/ItemDetailModal';
 import { ItemStatusBadge } from '@/components/items/ItemStatusBadge';
 import { SmartPagination } from '@/components/ui/SmartPagination';
+import { TableLoader } from '@/components/ui/TableLoader';
 import { Toast } from '@/components/ui/Toast';
 import type { SessionUser } from '@/hooks/useAuth';
 
@@ -632,11 +633,7 @@ export function ManageItemsDashboard({
 
       <div className="overflow-hidden rounded-[14px] border border-slate-200 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)] dark:border-[#334155] dark:bg-[#1e293b]">
         {loading ? (
-          <div className="space-y-3 p-6">
-            {Array.from({ length: 8 }).map((_, index) => (
-              <div key={index} className="h-14 animate-pulse rounded-lg bg-slate-100 dark:bg-[#0f172a]" />
-            ))}
-          </div>
+          <TableLoader label="Loading items..." minHeight="320px" />
         ) : result.items.length === 0 ? (
           <div className="p-10 text-center">
             <p className="text-lg font-semibold text-slate-900 dark:text-[#f1f5f9]">

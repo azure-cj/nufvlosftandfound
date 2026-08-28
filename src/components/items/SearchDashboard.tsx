@@ -7,6 +7,7 @@ import { useDebounce } from '@/hooks/useDebounce';
 import type { Item } from '@/types/item';
 import { Input } from '@/components/ui/Input';
 import { SmartPagination } from '@/components/ui/SmartPagination';
+import { TableLoader } from '@/components/ui/TableLoader';
 import { ItemsTable } from './ItemsTable';
 
 type SearchState = {
@@ -208,13 +209,7 @@ export function SearchDashboard() {
       </div>
 
       {loading ? (
-        <div className="rounded-2xl bg-white p-6 shadow-[0_12px_30px_rgba(15,23,42,0.06)]">
-          <div className="space-y-3">
-            {Array.from({ length: 5 }).map((_, index) => (
-              <div key={index} className="h-12 animate-pulse rounded-xl bg-slate-100" />
-            ))}
-          </div>
-        </div>
+        <TableLoader label="Searching items..." minHeight="300px" />
       ) : result.items.length === 0 ? (
         <div className="rounded-2xl bg-white p-10 text-center shadow-[0_12px_30px_rgba(15,23,42,0.06)]">
           <p className="text-lg font-semibold text-slate-900">No results found</p>

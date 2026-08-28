@@ -110,18 +110,6 @@ export function DashboardHeader({
           </div>
         </form>
 
-        <button
-          aria-label="Notifications"
-          className="relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 text-slate-500 transition hover:bg-slate-50 hover:text-slate-700 dark:border-[#334155] dark:text-slate-400 dark:hover:bg-[#1e293b] dark:hover:text-[#f1f5f9]"
-          type="button"
-        >
-          <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-            <path d="M15 17h5l-1.4-1.4A2 2 0 0 1 18 14.2V11a6 6 0 1 0-12 0v3.2a2 2 0 0 1-.6 1.4L4 17h5" />
-            <path d="M10 17a2 2 0 0 0 4 0" />
-          </svg>
-          <span className="absolute right-3 top-3 h-2 w-2 rounded-full bg-red-500" />
-        </button>
-
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#6366f1] text-sm font-bold text-white">
             {initials}
