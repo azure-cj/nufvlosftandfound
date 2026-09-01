@@ -1,132 +1,49 @@
-# NUFV Lost & Found Management System
+# NUFV Lost & Found Portal
 
-A modern, high-performance Lost & Found management system for National University Fairview (NUFV), built with Next.js 15, TypeScript, Prisma, and PostgreSQL.
+A modern Lost & Found web portal for National University Fairview (NUFV), designed to streamline campus item recovery for students, staff, and administration.
 
 ---
 
 ## Overview
 
-The NUFV Lost & Found system streamlines campus item recovery by providing:
+The NUFV Lost & Found portal provides a centralized platform for tracking and claiming lost items across campus:
 
-- **Public Catalog:** Non-authenticated search and filterable directory of found items.
-- **Staff Operations:** Intake flow, item status updates (Claim, Dispose, Edit), and modal inspection.
-- **Admin Dashboard:** Role-based user management, filtered audit logs, and automated CSV reports.
-- **Privacy & Security:** GCash-style claimer name masking with on-demand click-to-reveal toggle, zero fallback authenticators, and binary magic-byte image validation.
-
----
-
-## Tech Stack
-
-- **Framework:** Next.js 15 (App Router, Server Components)
-- **UI & Styling:** React 19, Tailwind CSS, Lucide-style SVG Icons
-- **Database & ORM:** PostgreSQL (Neon) / Prisma ORM
-- **Authentication:** JWT via `jose`, HttpOnly SameSite=Lax Cookies, `bcryptjs` password hashing (cost factor 10)
-- **Storage:** Vercel Blob Storage
-- **Charts & Export:** Recharts, PapaParse CSV
+- **Public Catalog:** Search and filter available lost items by category, location, and date range.
+- **Item Claims:** Guided process for students to locate and claim lost belongings.
+- **Staff Dashboard:** Tools for campus staff to log new found items, update item statuses, and verify claims.
+- **Admin Management:** Management of staff accounts, system audit history, and report generation.
 
 ---
 
-## Key Features
+## User Features
 
-### 1. Public Browse & Search
-- Filter items by category, keyword, status, location, and date range.
-- Standardized `ITEM-YYYY-####` sequential item codes.
-- Strictly displays active, non-flagged, `PENDING` items only.
+### 1. Public Item Search & Browse
+- Search found items using keywords, item codes, or categories.
+- Filter by date range and campus location.
+- View item details and location guidance for physical claiming at the Student Discipline Office.
 
-### 2. Staff Management Dashboard
-- Session-based JWT authentication with optional "Remember Me".
-- Add, edit, and delete item records with full audit trail logging.
-- Process claims and log verification details.
-- Standardized **SmartPagination** across all tables (25 items per page).
+### 2. Staff Management & Intake
+- Secure staff login portal.
+- Register new found items with item descriptions and category tags.
+- Update item statuses (Available, Claimed, Disposed).
+- On-screen name privacy protections for claim records with click-to-reveal controls.
 
-### 3. Privacy & Security Controls
-- **GCash-Style Name Masking:** Claimer names are masked on-screen by default (`J***n D.`) for all viewers to prevent shoulder-surfing, with an accessible click-to-reveal toggle.
-- **Image Security:** Uploads strictly validate raw binary magic-byte signatures (JPEG, PNG, WebP) and generate server-side random filenames.
-- **Audit Logging:** System actions (item creation, claims, deletions, administrative user management) generate persistent audit logs.
-
-### 4. Background Services & Maintenance
-- **Overdue Cron:** Automatically identifies items past their retention window.
-- **Disposal Cron:** Transitions expired items to `DISPOSED` status.
-- **Purge Engine:** Automated deletion utility for old disposed records with automatic Vercel Blob storage cleanup and `--dry-run` safety net.
+### 3. Administrative Tools
+- Role-based access control for administrative staff.
+- Export item and activity reports to CSV.
+- Track system audit history for campus transparency.
 
 ---
 
-## Project Structure
-
-```text
-src/
-  app/
-    (auth)/login/               Auth routes
-    (dashboard)/                Staff & Admin dashboard views
-      admin/                    User management, reports, audit logs
-      items/                    Item management & claimed directory
-    api/                        REST API & Cron route handlers
-  components/
-    admin/                      Admin UI components
-    items/                      Item tables, modals, pagination
-    layout/                     Header, Footer, Dashboard Shell
-    ui/                         SmartPagination, RevealableName, TableLoader
-  lib/
-    auth.ts                     JWT session management & password hashing
-    admin.ts                    Admin payload guards & report queries
-    items.ts                    Shared item database queries
-    purge.ts                    Disposed item purge engine
-    utils.ts                    Date formatting & name masking logic
-```
-
----
-
-## Setup & Environment Configuration
-
-Create a `.env.local` file in the root directory:
-
-```env
-# Database Connection
-DATABASE_URL="postgresql://<user>:<password>@<host>/<database>?sslmode=require"
-
-# Storage
-BLOB_READ_WRITE_TOKEN="your-vercel-blob-token"
-
-# Authentication
-JWT_SECRET="your-secure-jwt-secret"
-CRON_SECRET="your-cron-secret-token"
-
-# Application Configuration
-NEXT_PUBLIC_APP_NAME="NUFV Lost and Found"
-NEXT_PUBLIC_MAX_FILE_SIZE=5242880
-```
-
----
-
-## Local Development Workflow
+## Quick Start (Local Development)
 
 ```bash
-# 1. Install dependencies
+# Install dependencies
 npm install
 
-# 2. Generate Prisma Client
-npx prisma generate
-
-# 3. Apply database migrations
-npx prisma db push
-
-# 4. Start local development server
+# Run the development server
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
-
----
-
-## Build & Deployment
-
-For Vercel deployment:
-
-```bash
-# Production build check
-npm run build
-```
-
-Ensure all environment variables (`DATABASE_URL`, `JWT_SECRET`, `CRON_SECRET`, `BLOB_READ_WRITE_TOKEN`) are configured in your deployment platform settings.
-
+Open [http://localhost:3000](http://localhost:3000) in your browser to view the portal.
 
