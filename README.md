@@ -33,17 +33,4 @@ The NUFV Lost & Found portal provides a centralized platform for tracking and cl
 - Export item and activity reports to CSV.
 - Track system audit history for campus transparency.
 
----
-
-## Quick Start (Local Development)
-
-```bash
-# Install dependencies
-npm install
-
-# Run the development server
-npm run dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) in your browser to view the portal.
 
