@@ -33,10 +33,9 @@ export function Footer() {
           <h3 className="text-lg font-semibold">Contact Info</h3>
           <div className="mt-3 space-y-2 text-sm text-slate-300">
             <p>Email: sdo@nu-fairview.edu.ph</p>
-            <p>Bug Reports: aureocv@students.nu-fairview.edu.ph</p>
             <p>Location: Student Discipline Office, 2nd Floor</p>
-            <p>Hours: M-F 8:00 AM - 5:00 PM</p>
-            <p>Saturday: 8:00 AM - 12:00 PM</p>
+            <p>Hours: M-F 7:00 AM - 7:00 PM</p>
+            <p>Saturday: 8:30 AM - 12:30 PM</p>
           </div>
         </section>
       </div>
